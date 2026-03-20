@@ -122,6 +122,19 @@ func (c *Client) GetMediaSegments(item Item, types []string) (map[int64]int64, e
 	return segments, nil
 }
 
+// GetAllMediaSegments returns a map of start ticks to end ticks of all media segments for the given item.
+func (c *Client) GetAllMediaSegments(item Item) (map[int64]int64, error) {
+	res, _, err := c.api.MediaSegmentsAPI.GetItemSegments(context.Background(), item.GetId()).Execute()
+	if err != nil {
+		return nil, err
+	}
+	segments := make(map[int64]int64, len(res.Items))
+	for _, segment := range res.Items {
+		segments[segment.GetStartTicks()] = segment.GetEndTicks()
+	}
+	return segments, nil
+}
+
 func (c *Client) MarkAsWatched(item Item) error {
 	_, _, err := c.api.PlaystateAPI.MarkPlayedItem(context.Background(), item.GetId()).Execute()
 	return err

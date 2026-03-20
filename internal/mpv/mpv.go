@@ -67,13 +67,14 @@ type request struct {
 }
 
 type message struct {
-	Error      string `json:"error,omitempty"`
-	ID         int    `json:"request_id,omitempty"`
-	Event      string `json:"event,omitempty"`
-	Name       string `json:"name,omitempty"`
-	Reason     string `json:"reason,omitempty"`
-	Data       any    `json:"data,omitempty"`
-	PlaylistID int    `json:"playlist_entry_id,omitempty"`
+	Error      string   `json:"error,omitempty"`
+	ID         int      `json:"request_id,omitempty"`
+	Event      string   `json:"event,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	Reason     string   `json:"reason,omitempty"`
+	Data       any      `json:"data,omitempty"`
+	PlaylistID int      `json:"playlist_entry_id,omitempty"`
+	Args       []string `json:"args,omitempty"`
 }
 
 type mpv struct {
@@ -161,4 +162,11 @@ func (c *mpv) playFile(url, title string, start float64) error {
 
 func (c *mpv) addSubtitle(url, title, lang string) error {
 	return c.send([]any{"sub-add", url, "auto", title, lang})
+}
+
+// keybind registers a key binding in mpv that sends a client-message event with the given name.
+// When the key is pressed in mpv, a "client-message" event with Args[0] == name will be received.
+func (c *mpv) keybind(key, name string) error {
+	script := fmt.Sprintf("script-message %s", name)
+	return c.send([]any{"keybind", key, script})
 }

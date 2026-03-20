@@ -41,6 +41,11 @@ func Play(client *jellyfin.Client, items []jellyfin.Item, index int) error {
 		return fmt.Errorf("failed to observe time-pos: %w", err)
 	}
 
+	// register Ctrl+s in mpv to trigger manual segment skip
+	if err := mpv.keybind("Ctrl+s", "jfsh-skip-segment"); err != nil {
+		slog.Error("failed to register skip-segment keybinding", "err", err)
+	}
+
 	// keeps track of the playlist index of items as they get loaded into mpv
 	playlistIDs := make([]int, 0, len(items))
 
@@ -78,6 +83,7 @@ func Play(client *jellyfin.Client, items []jellyfin.Item, index int) error {
 	item := items[index]
 	skippableSegmentTypes := viper.GetStringSlice("skip_segments")
 	skippableSegments := make(map[float64]float64)
+	allSegments := make(map[float64]float64) // all segment types, for manual skip
 	for mpv.scanner.Scan() {
 		line := mpv.scanner.Text()
 		if line == "" {
@@ -123,6 +129,19 @@ func Play(client *jellyfin.Client, items []jellyfin.Item, index int) error {
 				}
 			}
 
+		case "client-message":
+			if len(msg.Args) > 0 && msg.Args[0] == "jfsh-skip-segment" {
+				if end := isInsideSkippableSegment(allSegments, pos); end != 0 {
+					if err := mpv.seekTo(end); err != nil {
+						logger.Error("failed to seek to end of segment (manual skip)", "err", err)
+					} else {
+						logger.Info("manual skip: seeked to end of segment", "pos", end)
+					}
+				} else {
+					logger.Debug("manual skip: not inside any segment", "pos", pos)
+				}
+			}
+
 		case "start-file":
 			// figure out what item is being played
 			id := msg.PlaylistID - 1
@@ -140,7 +159,8 @@ func Play(client *jellyfin.Client, items []jellyfin.Item, index int) error {
 				logger.Info("reported playback start", "item", item.GetName(), "pos", pos)
 			}
 
-			// get skippable segments
+			// get skippable segments (auto-skip, filtered by config)
+			skippableSegments = make(map[float64]float64)
 			logger.Debug("requesting skippable segments", "types", skippableSegmentTypes)
 			segments, err := client.GetMediaSegments(item, skippableSegmentTypes)
 			if err != nil {
@@ -153,6 +173,20 @@ func Play(client *jellyfin.Client, items []jellyfin.Item, index int) error {
 				startSeconds, endSeconds := ticksToSeconds(start), ticksToSeconds(end)
 				skippableSegments[startSeconds] = endSeconds
 				logger.Info("added skippable segment", "start", start, "end", end)
+			}
+
+			// get all segments (for manual skip)
+			allSegments = make(map[float64]float64)
+			allSegs, err := client.GetAllMediaSegments(item)
+			if err != nil {
+				logger.Error("failed to get all media segments", "err", err)
+			}
+			for start, end := range allSegs {
+				startSeconds, endSeconds := ticksToSeconds(start), ticksToSeconds(end)
+				allSegments[startSeconds] = endSeconds
+			}
+			if len(allSegments) > 0 {
+				logger.Info("loaded all segments for manual skip", "count", len(allSegments))
 			}
 
 			// load external subtitles
