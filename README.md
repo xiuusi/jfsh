@@ -1,5 +1,11 @@
 # jfsh
 
+> **This is a fork of [hacel/jfsh](https://github.com/hacel/jfsh).**
+> Changes in this fork:
+> - **Manual segment skipping**: Press `Ctrl+s` in the mpv window to skip the current segment (intro, outro, etc.), independent of the `skip_segments` auto-skip configuration.
+
+[中文说明](README_zh.md)
+
 A terminal-based client for [Jellyfin](https://jellyfin.org) that lets you browse your media library and play videos via [mpv](https://mpv.io).
 Inspired by [jftui](https://github.com/Aanok/jftui).
 
@@ -10,7 +16,7 @@ Inspired by [jftui](https://github.com/Aanok/jftui).
 - Uses _your_ mpv config!
 - Resumes playback!
 - Tracks playback progress and updates jellyfin!
-- Automatic segment (intro, etc.) skipping!
+- Automatic and manual segment (intro, etc.) skipping!
 - No mouse required!
 
 ## Installation
@@ -86,6 +92,8 @@ skip_segments: # Segments to automatically skip (default: [])
 ### Segment skipping
 
 By default, no segments are automatically skipped. To enable skipping segments you must add `skip_segments` to the configuration file. Possible values for `skip_segments` are the segment types in Jellyfin which are: `Unknown`, `Commercial`, `Preview`, `Recap`, `Outro` and `Intro`.
+
+You can also manually skip the current segment by pressing **`Ctrl+s`** in the mpv window. This works for all segment types regardless of `skip_segments` configuration — if the current playback position is inside any segment, it will seek to the end of that segment.
 
 ## Plans
 
