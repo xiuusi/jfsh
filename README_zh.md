@@ -25,23 +25,18 @@
 
 - 运行中的 [Jellyfin](https://jellyfin.org) 服务器
 - [mpv](https://mpv.io) 已安装且在 PATH 中
-
-#### 从 AUR 安装
-
-Arch Linux 用户可通过 [AUR](https://aur.archlinux.org/packages/jfsh) 安装：
+- [Go](https://go.dev) 1.23 或更高版本
 
 ```sh
-yay -S jfsh
+git clone https://github.com/xiuusi/jfsh.git
+cd jfsh
+go build -o jfsh .
 ```
 
-#### 下载预编译版本
-
-从 [Releases 页面](https://github.com/hacel/jfsh/releases/latest) 下载适合你平台的预编译二进制文件。
-
-#### 通过 go install 安装
+将编译好的二进制文件移动到 PATH 目录中，例如：
 
 ```sh
-go install github.com/hacel/jfsh@latest
+mv jfsh ~/.local/bin/
 ```
 
 ## 使用方法
