@@ -25,23 +25,18 @@ Inspired by [jftui](https://github.com/Aanok/jftui).
 
 - A running [Jellyfin](https://jellyfin.org) instance.
 - [mpv](https://mpv.io) available in PATH.
-
-#### Install from AUR
-
-On Arch Linux, jfsh can be installed from the [AUR](https://aur.archlinux.org/packages/jfsh)
+- [Go](https://go.dev) 1.23 or later.
 
 ```sh
-yay -S jfsh
+git clone https://github.com/xiuusi/jfsh.git
+cd jfsh
+go build -o jfsh .
 ```
 
-#### Download a release
-
-Download the latest pre-built binary for your platform from the [releases page](https://github.com/hacel/jfsh/releases/latest).
-
-#### Install via go
+Move the built binary to a directory in your PATH, e.g.:
 
 ```sh
-go install github.com/hacel/jfsh@latest
+mv jfsh ~/.local/bin/
 ```
 
 ## Usage
