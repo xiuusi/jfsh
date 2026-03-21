@@ -68,7 +68,7 @@ func (m model) View() string {
 		var tabsView string
 		if m.currentSeries == nil {
 			var tabs []string
-			for i, name := range []string{ResumeTabName, NextUpTabName, RecentlyAddedTabName, SearchTabName} {
+			for i, name := range []string{ResumeTabName, NextUpTabName, RecentlyAddedTabName, LibrariesTabName, SearchTabName} {
 				if tab(i) == m.currentTab {
 					tabs = append(tabs, currentTabStyle.Render(name))
 					continue
