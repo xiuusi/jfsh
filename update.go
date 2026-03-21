@@ -331,6 +331,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keyMap.Select):
 			item := m.items[m.currentItem]
 			if jellyfin.IsSeries(item) || jellyfin.IsFolder(item) {
+				m.navStack = append(m.navStack, item)
 				m.currentSeries = &item
 				m.updateKeys()
 				return m, m.fetchItems()
@@ -340,7 +341,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.playItem()
 
 		case key.Matches(msg, m.keyMap.Back):
-			m.currentSeries = nil
+			if len(m.navStack) > 0 {
+				m.navStack = m.navStack[:len(m.navStack)-1]
+				if len(m.navStack) > 0 {
+					m.currentSeries = &m.navStack[len(m.navStack)-1]
+				} else {
+					m.currentSeries = nil
+				}
+			} else {
+				m.currentSeries = nil
+			}
 			m.updateKeys()
 			return m, m.fetchItems()
 
