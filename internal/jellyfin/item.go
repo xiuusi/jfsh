@@ -23,6 +23,65 @@ func getItemRuntime(ticks int64) string {
 	return fmt.Sprintf("%dh%dm", hours, minutes)
 }
 
+type VideoInfo struct {
+	Width      int32
+	Height     int32
+	VideoRange string
+	Codec      string
+	BitDepth   int32
+	FrameRate  float32
+}
+
+func GetVideoInfo(item Item) VideoInfo {
+	info := VideoInfo{}
+	streams := item.GetMediaStreams()
+	for _, stream := range streams {
+		if stream.GetType() == api.MEDIASTREAMTYPE_VIDEO {
+			info.Width = stream.GetWidth()
+			info.Height = stream.GetHeight()
+			info.Codec = stream.GetCodec()
+			info.BitDepth = stream.GetBitDepth()
+			if stream.HasAverageFrameRate() {
+				info.FrameRate = stream.GetAverageFrameRate()
+			} else if stream.HasRealFrameRate() {
+				info.FrameRate = stream.GetRealFrameRate()
+			}
+			if vrt := stream.GetVideoRangeType(); vrt != "" {
+				info.VideoRange = string(vrt)
+			}
+			break
+		}
+	}
+	return info
+}
+
+func GetVideoResolution(item Item) string {
+	info := GetVideoInfo(item)
+	if info.Width > 0 && info.Height > 0 {
+		return fmt.Sprintf("%dx%d", info.Width, info.Height)
+	}
+	return ""
+}
+
+func GetVideoCodec(item Item) string {
+	info := GetVideoInfo(item)
+	if info.Codec != "" {
+		return strings.ToUpper(info.Codec)
+	}
+	return ""
+}
+
+func GetVideoHDR(item Item) string {
+	info := GetVideoInfo(item)
+	if info.VideoRange == "" || info.VideoRange == "SDR" || info.VideoRange == "Unknown" {
+		return ""
+	}
+	if info.VideoRange == "DOVI" && info.Codec != "" {
+		return fmt.Sprintf("DOVI (%s)", strings.ToUpper(info.Codec))
+	}
+	return info.VideoRange
+}
+
 func GetResumePosition(item Item) (ticks int64) {
 	if data, ok := item.GetUserDataOk(); ok {
 		ticks = data.GetPlaybackPositionTicks()
@@ -92,6 +151,28 @@ func GetItemTitle(item Item) string {
 
 func GetItemDescription(item Item) string {
 	str := &strings.Builder{}
+	appendVideoInfo := func() {
+		res := GetVideoResolution(item)
+		codec := GetVideoCodec(item)
+		hdr := GetVideoHDR(item)
+		info := GetVideoInfo(item)
+
+		parts := []string{}
+		if res != "" {
+			parts = append(parts, res)
+		}
+		if codec != "" {
+			parts = append(parts, codec)
+		}
+		if hdr != "" {
+			parts = append(parts, hdr)
+		} else if info.BitDepth > 0 {
+			parts = append(parts, fmt.Sprintf("%d-bit", info.BitDepth))
+		}
+		if len(parts) > 0 {
+			fmt.Fprintf(str, " | %s", strings.Join(parts, " "))
+		}
+	}
 	switch item.GetType() {
 	case api.BASEITEMKIND_MOVIE:
 		rating := item.GetCommunityRating()
@@ -101,10 +182,12 @@ func GetItemDescription(item Item) string {
 		} else {
 			fmt.Fprintf(str, "Movie  | Runtime: %s", runtime)
 		}
+		appendVideoInfo()
 	case api.BASEITEMKIND_SERIES:
 		fmt.Fprintf(str, "Series")
 	case api.BASEITEMKIND_EPISODE:
 		fmt.Fprintf(str, "%s", item.GetName())
+		appendVideoInfo()
 	case api.BASEITEMKIND_VIDEO:
 		rating := item.GetCommunityRating()
 		runtime := getItemRuntime(item.GetRunTimeTicks())
@@ -113,6 +196,7 @@ func GetItemDescription(item Item) string {
 		} else {
 			fmt.Fprintf(str, "Video  | Runtime: %s", runtime)
 		}
+		appendVideoInfo()
 	case api.BASEITEMKIND_USER_VIEW, api.BASEITEMKIND_COLLECTION_FOLDER, api.BASEITEMKIND_AGGREGATE_FOLDER, api.BASEITEMKIND_FOLDER:
 		fmt.Fprintf(str, "Library")
 	}
