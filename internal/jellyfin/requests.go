@@ -46,12 +46,36 @@ func (c *Client) GetRecentlyAdded() ([]Item, error) {
 	return res.Items, nil
 }
 
+func (c *Client) GetLibraries() ([]Item, error) {
+	res, _, err := c.api.UserViewsAPI.GetUserViews(context.Background()).
+		UserId(c.UserID).
+		Execute()
+	if err != nil {
+		return nil, err
+	}
+	if res.Items == nil {
+		return []Item{}, nil
+	}
+	return res.Items, nil
+}
+
 func (c *Client) GetEpisodes(item Item) ([]Item, error) {
 	seriesID := item.GetSeriesId()
 	if item.GetType() == api.BASEITEMKIND_SERIES {
 		seriesID = item.GetId()
 	}
 	res, _, err := c.api.TvShowsAPI.GetEpisodes(context.Background(), seriesID).
+		Fields([]api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS}).
+		Execute()
+	if err != nil {
+		return nil, err
+	}
+	return res.Items, nil
+}
+
+func (c *Client) GetItemsByParent(parentId string) ([]Item, error) {
+	res, _, err := c.api.ItemsAPI.GetItems(context.Background()).
+		ParentId(parentId).
 		Fields([]api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS}).
 		Execute()
 	if err != nil {

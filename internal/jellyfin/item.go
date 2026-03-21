@@ -66,6 +66,11 @@ func GetItemTitle(item Item) string {
 		}
 	case api.BASEITEMKIND_VIDEO:
 		fmt.Fprintf(str, "%s (%d)", item.GetName(), item.GetProductionYear())
+	case api.BASEITEMKIND_USER_VIEW, api.BASEITEMKIND_COLLECTION_FOLDER, api.BASEITEMKIND_AGGREGATE_FOLDER, api.BASEITEMKIND_FOLDER:
+		fmt.Fprintf(str, "%s", item.GetName())
+		if data, ok := item.GetUserDataOk(); ok {
+			fmt.Fprintf(str, " [%d]", data.GetUnplayedItemCount())
+		}
 	}
 	return str.String()
 }
@@ -81,6 +86,8 @@ func GetItemDescription(item Item) string {
 		fmt.Fprintf(str, "%s", item.GetName())
 	case api.BASEITEMKIND_VIDEO:
 		fmt.Fprintf(str, "Video  | Rating: %.1f | Runtime: %s", item.GetCommunityRating(), getItemRuntime(item.GetRunTimeTicks()))
+	case api.BASEITEMKIND_USER_VIEW, api.BASEITEMKIND_COLLECTION_FOLDER, api.BASEITEMKIND_AGGREGATE_FOLDER, api.BASEITEMKIND_FOLDER:
+		fmt.Fprintf(str, "Library | Rating: %.1f", item.GetCommunityRating())
 	}
 	return str.String()
 }
@@ -99,6 +106,14 @@ func IsEpisode(item Item) bool {
 
 func IsVideo(item Item) bool {
 	return item.GetType() == api.BASEITEMKIND_VIDEO
+}
+
+func IsFolder(item Item) bool {
+	kind := item.GetType()
+	return kind == api.BASEITEMKIND_FOLDER ||
+		kind == api.BASEITEMKIND_USER_VIEW ||
+		kind == api.BASEITEMKIND_COLLECTION_FOLDER ||
+		kind == api.BASEITEMKIND_AGGREGATE_FOLDER
 }
 
 func Watched(item Item) bool {

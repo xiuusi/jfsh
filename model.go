@@ -14,10 +14,12 @@ const (
 	Resume tab = iota
 	NextUp
 	RecentlyAdded
+	Libraries
 	Search
 	ResumeTabName        = "Resume"
 	NextUpTabName        = "Next Up"
 	RecentlyAddedTabName = "Recently Added"
+	LibrariesTabName     = "Libraries"
 	SearchTabName        = "Search"
 )
 

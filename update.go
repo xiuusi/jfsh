@@ -77,12 +77,23 @@ func (m *model) fetchItems() tea.Cmd {
 	m.loading = true
 	client := m.client
 	if m.currentSeries != nil {
-		return func() tea.Msg {
-			items, err := client.GetEpisodes(*m.currentSeries)
-			if err != nil {
-				return fetchItemsResult{nil, err}
+		if jellyfin.IsSeries(*m.currentSeries) {
+			return func() tea.Msg {
+				items, err := client.GetEpisodes(*m.currentSeries)
+				if err != nil {
+					return fetchItemsResult{nil, err}
+				}
+				return fetchItemsResult{items, nil}
 			}
-			return fetchItemsResult{items, nil}
+		}
+		if jellyfin.IsFolder(*m.currentSeries) {
+			return func() tea.Msg {
+				items, err := client.GetItemsByParent(m.currentSeries.GetId())
+				if err != nil {
+					return fetchItemsResult{nil, err}
+				}
+				return fetchItemsResult{items, nil}
+			}
 		}
 	}
 	switch m.currentTab {
@@ -105,6 +116,14 @@ func (m *model) fetchItems() tea.Cmd {
 	case RecentlyAdded:
 		return func() tea.Msg {
 			items, err := client.GetRecentlyAdded()
+			if err != nil {
+				return fetchItemsResult{nil, err}
+			}
+			return fetchItemsResult{items, nil}
+		}
+	case Libraries:
+		return func() tea.Msg {
+			items, err := client.GetLibraries()
 			if err != nil {
 				return fetchItemsResult{nil, err}
 			}
@@ -311,7 +330,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keyMap.Select):
 			item := m.items[m.currentItem]
-			if jellyfin.IsSeries(item) {
+			if jellyfin.IsSeries(item) || jellyfin.IsFolder(item) {
 				m.currentSeries = &item
 				m.updateKeys()
 				return m, m.fetchItems()
