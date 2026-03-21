@@ -44,6 +44,8 @@ type model struct {
 
 	currentSeries *jellyfin.Item
 
+	navStack []jellyfin.Item
+
 	playing *jellyfin.Item
 
 	err     error
