@@ -2,7 +2,8 @@
 
 > **This is a fork of [hacel/jfsh](https://github.com/hacel/jfsh).**
 > Changes in this fork:
-> - **Manual segment skipping**: Press `Ctrl+s` in the mpv window to skip the current segment (intro, outro, etc.), independent of the `skip_segments` auto-skip configuration.
+> - **Media library browsing**: Added a new "Libraries" tab to browse your Jellyfin media libraries directly. (Implemented by you)
+> - **Manual segment skipping**: Press `Ctrl+s` in the mpv window to skip the current segment (intro, outro, etc.), independent of the `skip_segments` auto-skip configuration. (Implemented by opus 4.6)
 
 [中文说明](README_zh.md)
 
@@ -17,6 +18,7 @@ Inspired by [jftui](https://github.com/Aanok/jftui).
 - Resumes playback!
 - Tracks playback progress and updates jellyfin!
 - Automatic and manual segment (intro, etc.) skipping!
+- **Library browsing**: Browse your media libraries via the Libraries tab!
 - No mouse required!
 
 ## Installation
@@ -60,7 +62,22 @@ mv jfsh ~/.local/bin/
    - Select an item and press **Enter** or **Space** to play it.
    - `mpv` will launch and begin streaming.
 
-4. **Quit**
+4. **Navigate tabs**
+
+   - **Resume**: Continue watching (incomplete media)
+   - **Next Up**: Next episode of TV series
+   - **Recently Added**: Recently added media
+   - **Libraries**: Media library list
+   - **Search**: Search
+
+5. **Browse libraries**
+
+   - Switch to the **Libraries** tab to view all media libraries
+   - Select a library and press **Enter** to browse its contents
+   - Select a specific item (movie, series) and press **Enter** to play
+   - Press **Esc** or **Backspace** to go back
+
+6. **Quit**
 
    - Press **`q`** at any time to exit jfsh.
 
@@ -93,6 +110,5 @@ You can also manually skip the current segment by pressing **`Ctrl+s`** in the m
 ## Plans
 
 - Configuration through TUI
-- Complete library browsing
 - Sorting
 - Better search: Filter by media type, watched status, and metadata

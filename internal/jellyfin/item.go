@@ -50,7 +50,13 @@ func GetItemTitle(item Item) string {
 	str := &strings.Builder{}
 	switch item.GetType() {
 	case api.BASEITEMKIND_MOVIE:
-		fmt.Fprintf(str, "%s (%d)", item.GetName(), item.GetProductionYear())
+		name := item.GetName()
+		year := item.GetProductionYear()
+		if year > 0 {
+			fmt.Fprintf(str, "%s (%d)", name, year)
+		} else {
+			fmt.Fprintf(str, "%s", name)
+		}
 		if data, ok := item.GetUserDataOk(); ok && data.GetPlayedPercentage() > 0 {
 			fmt.Fprintf(str, " [%.f%%]", data.GetPlayedPercentage())
 		}
@@ -60,7 +66,13 @@ func GetItemTitle(item Item) string {
 			fmt.Fprintf(str, " [%.f%%]", data.GetPlayedPercentage())
 		}
 	case api.BASEITEMKIND_SERIES:
-		fmt.Fprintf(str, "%s (%d)", item.GetName(), item.GetProductionYear())
+		name := item.GetName()
+		year := item.GetProductionYear()
+		if year > 0 {
+			fmt.Fprintf(str, "%s (%d)", name, year)
+		} else {
+			fmt.Fprintf(str, "%s", name)
+		}
 		if data, ok := item.GetUserDataOk(); ok {
 			fmt.Fprintf(str, " [%d]", data.GetUnplayedItemCount())
 		}
@@ -69,7 +81,10 @@ func GetItemTitle(item Item) string {
 	case api.BASEITEMKIND_USER_VIEW, api.BASEITEMKIND_COLLECTION_FOLDER, api.BASEITEMKIND_AGGREGATE_FOLDER, api.BASEITEMKIND_FOLDER:
 		fmt.Fprintf(str, "%s", item.GetName())
 		if data, ok := item.GetUserDataOk(); ok {
-			fmt.Fprintf(str, " [%d]", data.GetUnplayedItemCount())
+			unplayed := data.GetUnplayedItemCount()
+			if unplayed > 0 {
+				fmt.Fprintf(str, " [%d]", unplayed)
+			}
 		}
 	}
 	return str.String()
@@ -79,15 +94,27 @@ func GetItemDescription(item Item) string {
 	str := &strings.Builder{}
 	switch item.GetType() {
 	case api.BASEITEMKIND_MOVIE:
-		fmt.Fprintf(str, "Movie  | Rating: %.1f | Runtime: %s", item.GetCommunityRating(), getItemRuntime(item.GetRunTimeTicks()))
+		rating := item.GetCommunityRating()
+		runtime := getItemRuntime(item.GetRunTimeTicks())
+		if rating > 0 {
+			fmt.Fprintf(str, "Movie  | Rating: %.1f | Runtime: %s", rating, runtime)
+		} else {
+			fmt.Fprintf(str, "Movie  | Runtime: %s", runtime)
+		}
 	case api.BASEITEMKIND_SERIES:
-		fmt.Fprintf(str, "Series | Rating: %.1f", item.GetCommunityRating())
+		fmt.Fprintf(str, "Series")
 	case api.BASEITEMKIND_EPISODE:
 		fmt.Fprintf(str, "%s", item.GetName())
 	case api.BASEITEMKIND_VIDEO:
-		fmt.Fprintf(str, "Video  | Rating: %.1f | Runtime: %s", item.GetCommunityRating(), getItemRuntime(item.GetRunTimeTicks()))
+		rating := item.GetCommunityRating()
+		runtime := getItemRuntime(item.GetRunTimeTicks())
+		if rating > 0 {
+			fmt.Fprintf(str, "Video  | Rating: %.1f | Runtime: %s", rating, runtime)
+		} else {
+			fmt.Fprintf(str, "Video  | Runtime: %s", runtime)
+		}
 	case api.BASEITEMKIND_USER_VIEW, api.BASEITEMKIND_COLLECTION_FOLDER, api.BASEITEMKIND_AGGREGATE_FOLDER, api.BASEITEMKIND_FOLDER:
-		fmt.Fprintf(str, "Library | Rating: %.1f", item.GetCommunityRating())
+		fmt.Fprintf(str, "Library")
 	}
 	return str.String()
 }
