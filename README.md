@@ -4,6 +4,7 @@
 > Changes in this fork:
 > - **Media library browsing**: Added a new "Libraries" tab to browse your Jellyfin media libraries directly. (Implemented by minimax-m2.7)
 > - **Manual segment skipping**: Press `Ctrl+s` in the mpv window to skip the current segment (intro, outro, etc.), independent of the `skip_segments` auto-skip configuration. (Implemented by opus 4.6)
+> - **Media info display**: Shows resolution, codec, HDR info for movies and episodes in the description line. (Implemented by minimax-m2.7)
 
 [中文说明](README_zh.md)
 
@@ -19,6 +20,7 @@ Inspired by [jftui](https://github.com/Aanok/jftui).
 - Tracks playback progress and updates jellyfin!
 - Automatic and manual segment (intro, etc.) skipping!
 - **Library browsing**: Browse your media libraries via the Libraries tab!
+- **Media info display**: Shows resolution, codec, HDR info for movies and episodes!
 - No mouse required!
 
 ## Installation
