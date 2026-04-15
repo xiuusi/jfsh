@@ -45,7 +45,10 @@ func Play(client *jellyfin.Client, items []jellyfin.Item, index int) error {
 	playlistIDs := make([]int, 0, len(items))
 
 	// load file specified by index
-	url := jellyfin.GetStreamingURL(client.Host, items[index])
+	url, err := jellyfin.GetStreamingURL(client.Host, items[index])
+	if err != nil {
+		return fmt.Errorf("failed to build streaming url: %w", err)
+	}
 	start := ticksToSeconds(jellyfin.GetResumePosition(items[index]))
 	title := jellyfin.GetMediaTitle(items[index])
 	if err := mpv.playFile(url, title, start); err != nil {
@@ -55,7 +58,11 @@ func Play(client *jellyfin.Client, items []jellyfin.Item, index int) error {
 
 	// append to playlist the files after the index
 	for i := index + 1; i < len(items); i++ {
-		url := jellyfin.GetStreamingURL(client.Host, items[i])
+		url, err := jellyfin.GetStreamingURL(client.Host, items[i])
+		if err != nil {
+			slog.Error("failed to build streaming url", "err", err, "item", items[i].GetName())
+			continue
+		}
 		title := jellyfin.GetMediaTitle(items[i])
 		if err := mpv.appendFile(url, title); err != nil {
 			slog.Error("failed to append file to playlist", "err", err)
@@ -65,7 +72,11 @@ func Play(client *jellyfin.Client, items []jellyfin.Item, index int) error {
 
 	// prepend to playlist the files before the index
 	for i := index - 1; i >= 0; i-- {
-		url := jellyfin.GetStreamingURL(client.Host, items[i])
+		url, err := jellyfin.GetStreamingURL(client.Host, items[i])
+		if err != nil {
+			slog.Error("failed to build streaming url", "err", err, "item", items[i].GetName())
+			continue
+		}
 		title := jellyfin.GetMediaTitle(items[i])
 		if err := mpv.prependFile(url, title); err != nil {
 			slog.Error("failed to prepend file to playlist", "err", err)
