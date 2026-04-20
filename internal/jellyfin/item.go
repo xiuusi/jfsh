@@ -30,9 +30,12 @@ func GetResumePosition(item Item) (ticks int64) {
 	return
 }
 
-func GetStreamingURL(host string, item Item) string {
-	url := fmt.Sprintf("%s/videos/%s/stream?static=true", host, *item.Id)
-	return fmt.Sprintf("edl://%%%d%%%s", len(url), url)
+func GetStreamingURL(host string, item Item) (string, error) {
+	host, err := normalizeHost(host)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/videos/%s/stream?static=true", host, *item.Id), nil
 }
 
 func GetMediaTitle(item Item) string {

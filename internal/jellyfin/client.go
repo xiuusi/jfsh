@@ -38,6 +38,10 @@ func authorize(host, username, password, device, deviceID, version string) (toke
 }
 
 func NewClient(host, username, password, device, deviceID, version, token, userID string) (*Client, error) {
+	host, err := normalizeHost(host)
+	if err != nil {
+		return nil, err
+	}
 	if token == "" || userID == "" {
 		newToken, newUserID, err := authorize(host, username, password, device, deviceID, version)
 		if err != nil {
