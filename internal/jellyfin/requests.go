@@ -8,7 +8,7 @@ import (
 
 // itemFields are the fields requested for items in list views.
 // Genres is needed for genre tags in descriptions; MediaStreams for video info.
-var itemFields = []api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS, api.ITEMFIELDS_GENRES}
+var itemFields = []api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS, api.ITEMFIELDS_GENRES, api.ITEMFIELDS_CHILD_COUNT, api.ITEMFIELDS_RECURSIVE_ITEM_COUNT}
 
 func (c *Client) GetResume() ([]Item, error) {
 	res, _, err := c.api.ItemsAPI.GetResumeItems(context.Background()).
