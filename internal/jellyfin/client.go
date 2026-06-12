@@ -32,8 +32,17 @@ func authorize(host, username, password, device, deviceID, version string) (toke
 		slog.Error("failed to authenticate", "err", err)
 		return
 	}
-	token = *res.AccessToken.Get()
-	userID = *res.GetUser().Id
+	token = res.GetAccessToken()
+	if token == "" {
+		err = fmt.Errorf("authenticate: access token is nil")
+		return
+	}
+	user, ok := res.GetUserOk()
+	if !ok || user.Id == nil {
+		err = fmt.Errorf("authenticate: user id is nil")
+		return
+	}
+	userID = *user.Id
 	return
 }
 

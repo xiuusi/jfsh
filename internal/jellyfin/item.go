@@ -94,7 +94,11 @@ func GetStreamingURL(host string, item Item) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s/videos/%s/stream?static=true", host, *item.Id), nil
+	id := item.GetId()
+	if id == "" {
+		return "", fmt.Errorf("item id is empty")
+	}
+	return fmt.Sprintf("%s/videos/%s/stream?static=true", host, id), nil
 }
 
 func GetMediaTitle(item Item) string {
@@ -140,6 +144,8 @@ func GetItemTitle(item Item) string {
 		}
 	case api.BASEITEMKIND_VIDEO:
 		fmt.Fprintf(str, "%s (%d)", item.GetName(), item.GetProductionYear())
+	case api.BASEITEMKIND_SEASON:
+		fmt.Fprintf(str, "%s", item.GetName())
 	case api.BASEITEMKIND_USER_VIEW, api.BASEITEMKIND_COLLECTION_FOLDER, api.BASEITEMKIND_AGGREGATE_FOLDER, api.BASEITEMKIND_FOLDER:
 		fmt.Fprintf(str, "%s", item.GetName())
 		if data, ok := item.GetUserDataOk(); ok {
@@ -176,18 +182,41 @@ func GetItemDescription(item Item) string {
 			fmt.Fprintf(str, " | %s", strings.Join(parts, " "))
 		}
 	}
+	appendGenres := func() {
+		genres := item.GetGenres()
+		if len(genres) > 0 {
+			n := min(3, len(genres))
+			fmt.Fprintf(str, " | %s", strings.Join(genres[:n], ", "))
+		}
+	}
 	switch item.GetType() {
 	case api.BASEITEMKIND_MOVIE:
 		rating := item.GetCommunityRating()
 		runtime := getItemRuntime(item.GetRunTimeTicks())
 		if rating > 0 {
-			fmt.Fprintf(str, "Movie  | Rating: %.1f | Runtime: %s", rating, runtime)
+			fmt.Fprintf(str, "Movie | Rating: %.1f | %s", rating, runtime)
 		} else {
-			fmt.Fprintf(str, "Movie  | Runtime: %s", runtime)
+			fmt.Fprintf(str, "Movie | %s", runtime)
 		}
 		appendVideoInfo()
+		appendGenres()
 	case api.BASEITEMKIND_SERIES:
-		fmt.Fprintf(str, "Series")
+		childCount := item.GetChildCount()
+		epCount := item.GetRecursiveItemCount()
+		if epCount > 0 {
+			fmt.Fprintf(str, "%d Seasons | %d Episodes", childCount, epCount)
+		} else {
+			fmt.Fprintf(str, "%d Seasons", childCount)
+		}
+		if status := item.GetStatus(); status != "" {
+			fmt.Fprintf(str, " | %s", status)
+		}
+		appendGenres()
+	case api.BASEITEMKIND_SEASON:
+		childCount := item.GetChildCount()
+		if childCount > 0 {
+			fmt.Fprintf(str, "%d Episodes", childCount)
+		}
 	case api.BASEITEMKIND_EPISODE:
 		fmt.Fprintf(str, "%s", item.GetName())
 		appendVideoInfo()
@@ -195,11 +224,12 @@ func GetItemDescription(item Item) string {
 		rating := item.GetCommunityRating()
 		runtime := getItemRuntime(item.GetRunTimeTicks())
 		if rating > 0 {
-			fmt.Fprintf(str, "Video  | Rating: %.1f | Runtime: %s", rating, runtime)
+			fmt.Fprintf(str, "Video | Rating: %.1f | %s", rating, runtime)
 		} else {
-			fmt.Fprintf(str, "Video  | Runtime: %s", runtime)
+			fmt.Fprintf(str, "Video | %s", runtime)
 		}
 		appendVideoInfo()
+		appendGenres()
 	case api.BASEITEMKIND_USER_VIEW, api.BASEITEMKIND_COLLECTION_FOLDER, api.BASEITEMKIND_AGGREGATE_FOLDER, api.BASEITEMKIND_FOLDER:
 		fmt.Fprintf(str, "Library")
 	}
@@ -222,12 +252,17 @@ func IsVideo(item Item) bool {
 	return item.GetType() == api.BASEITEMKIND_VIDEO
 }
 
+func IsSeason(item Item) bool {
+	return item.GetType() == api.BASEITEMKIND_SEASON
+}
+
 func IsFolder(item Item) bool {
 	kind := item.GetType()
 	return kind == api.BASEITEMKIND_FOLDER ||
 		kind == api.BASEITEMKIND_USER_VIEW ||
 		kind == api.BASEITEMKIND_COLLECTION_FOLDER ||
-		kind == api.BASEITEMKIND_AGGREGATE_FOLDER
+		kind == api.BASEITEMKIND_AGGREGATE_FOLDER ||
+		kind == api.BASEITEMKIND_SEASON
 }
 
 func Watched(item Item) bool {

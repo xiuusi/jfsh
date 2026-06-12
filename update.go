@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 
@@ -20,15 +22,18 @@ func (m *model) playItem() tea.Cmd {
 	item := m.items[m.currentItem]
 	if jellyfin.IsEpisode(item) {
 		return func() tea.Msg {
-			// get all episodes of the series and find the index of selected episode
-			items, err := client.GetEpisodes(item)
+			// get all episodes of the season and find the index of selected episode
+			items, err := client.GetEpisodes(item.GetSeriesId(), item.GetSeasonId())
 			if err != nil {
 				return err
 			}
 			idx := slices.IndexFunc(items, func(i jellyfin.Item) bool {
 				return item.GetId() == i.GetId()
 			})
-			idx = max(0, idx) // sanity check
+			if idx < 0 {
+				slog.Warn("episode not found in series episode list", "item", item.GetId())
+				return playbackStopped{fmt.Errorf("episode not found in series")}
+			}
 			if err := mpv.Play(client, items, idx); err != nil {
 				return playbackStopped{err}
 			}
@@ -79,7 +84,16 @@ func (m *model) fetchItems() tea.Cmd {
 	if m.currentSeries != nil {
 		if jellyfin.IsSeries(*m.currentSeries) {
 			return func() tea.Msg {
-				items, err := client.GetEpisodes(*m.currentSeries)
+				items, err := client.GetSeasons(m.currentSeries.GetId())
+				if err != nil {
+					return fetchItemsResult{nil, err}
+				}
+				return fetchItemsResult{items, nil}
+			}
+		}
+		if jellyfin.IsSeason(*m.currentSeries) {
+			return func() tea.Msg {
+				items, err := client.GetEpisodes(m.currentSeries.GetSeriesId(), m.currentSeries.GetId())
 				if err != nil {
 					return fetchItemsResult{nil, err}
 				}
@@ -330,7 +344,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keyMap.Select):
 			item := m.items[m.currentItem]
-			if jellyfin.IsSeries(item) || jellyfin.IsFolder(item) {
+			if jellyfin.IsSeries(item) || jellyfin.IsSeason(item) || jellyfin.IsFolder(item) {
 				m.navStack = append(m.navStack, item)
 				m.currentSeries = &item
 				m.updateKeys()

@@ -34,12 +34,14 @@ func createMpv() (*mpv, error) {
 		}
 		if err := ctx.Err(); err != nil {
 			cmd.Process.Kill()
+			cmd.Wait()
 			return nil, fmt.Errorf("failed to connect to mpv socket: %w", err)
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
 	if err != nil {
 		cmd.Process.Kill()
+		cmd.Wait()
 		return nil, fmt.Errorf("failed to connect to mpv socket: %w", err)
 	}
 	return &mpv{

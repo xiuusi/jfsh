@@ -6,20 +6,27 @@ import (
 	"github.com/sj14/jellyfin-go/api"
 )
 
+// itemFields are the fields requested for items in list views.
+// Genres is needed for genre tags in descriptions; MediaStreams for video info.
+var itemFields = []api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS, api.ITEMFIELDS_GENRES}
+
 func (c *Client) GetResume() ([]Item, error) {
 	res, _, err := c.api.ItemsAPI.GetResumeItems(context.Background()).
 		UserId(c.UserID).
-		Fields([]api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS}).
+		Fields(itemFields).
 		Execute()
 	if err != nil {
 		return nil, err
+	}
+	if res.Items == nil {
+		return []Item{}, nil
 	}
 	return res.Items, nil
 }
 
 func (c *Client) GetNextUp() ([]Item, error) {
 	res, _, err := c.api.TvShowsAPI.GetNextUp(context.Background()).
-		Fields([]api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS}).
+		Fields(itemFields).
 		EnableTotalRecordCount(false).
 		DisableFirstEpisode(false).
 		EnableResumable(false).
@@ -28,6 +35,9 @@ func (c *Client) GetNextUp() ([]Item, error) {
 	if err != nil {
 		return nil, err
 	}
+	if res.Items == nil {
+		return []Item{}, nil
+	}
 	return res.Items, nil
 }
 
@@ -35,13 +45,16 @@ func (c *Client) GetRecentlyAdded() ([]Item, error) {
 	res, _, err := c.api.ItemsAPI.GetItems(context.Background()).
 		Recursive(true).
 		IncludeItemTypes([]api.BaseItemKind{api.BASEITEMKIND_MOVIE, api.BASEITEMKIND_SERIES}).
-		Fields([]api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS}).
+		Fields(itemFields).
 		Limit(100).
 		SortBy([]api.ItemSortBy{api.ITEMSORTBY_DATE_CREATED}).
 		SortOrder([]api.SortOrder{api.SORTORDER_DESCENDING}).
 		Execute()
 	if err != nil {
 		return nil, err
+	}
+	if res.Items == nil {
+		return []Item{}, nil
 	}
 	return res.Items, nil
 }
@@ -59,16 +72,32 @@ func (c *Client) GetLibraries() ([]Item, error) {
 	return res.Items, nil
 }
 
-func (c *Client) GetEpisodes(item Item) ([]Item, error) {
-	seriesID := item.GetSeriesId()
-	if item.GetType() == api.BASEITEMKIND_SERIES {
-		seriesID = item.GetId()
-	}
-	res, _, err := c.api.TvShowsAPI.GetEpisodes(context.Background(), seriesID).
-		Fields([]api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS}).
+func (c *Client) GetSeasons(seriesId string) ([]Item, error) {
+	res, _, err := c.api.TvShowsAPI.GetSeasons(context.Background(), seriesId).
+		UserId(c.UserID).
+		Fields(itemFields).
 		Execute()
 	if err != nil {
 		return nil, err
+	}
+	if res.Items == nil {
+		return []Item{}, nil
+	}
+	return res.Items, nil
+}
+
+func (c *Client) GetEpisodes(seriesId, seasonId string) ([]Item, error) {
+	req := c.api.TvShowsAPI.GetEpisodes(context.Background(), seriesId).
+		Fields(itemFields)
+	if seasonId != "" {
+		req = req.SeasonId(seasonId)
+	}
+	res, _, err := req.Execute()
+	if err != nil {
+		return nil, err
+	}
+	if res.Items == nil {
+		return []Item{}, nil
 	}
 	return res.Items, nil
 }
@@ -76,10 +105,13 @@ func (c *Client) GetEpisodes(item Item) ([]Item, error) {
 func (c *Client) GetItemsByParent(parentId string) ([]Item, error) {
 	res, _, err := c.api.ItemsAPI.GetItems(context.Background()).
 		ParentId(parentId).
-		Fields([]api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS}).
+		Fields(itemFields).
 		Execute()
 	if err != nil {
 		return nil, err
+	}
+	if res.Items == nil {
+		return []Item{}, nil
 	}
 	return res.Items, nil
 }
@@ -89,11 +121,14 @@ func (c *Client) Search(query string) ([]Item, error) {
 		SearchTerm(query).
 		Recursive(true).
 		IncludeItemTypes([]api.BaseItemKind{api.BASEITEMKIND_MOVIE, api.BASEITEMKIND_SERIES}).
-		Fields([]api.ItemFields{api.ITEMFIELDS_MEDIA_STREAMS}).
+		Fields(itemFields).
 		Limit(100).
 		Execute()
 	if err != nil {
 		return nil, err
+	}
+	if res.Items == nil {
+		return []Item{}, nil
 	}
 	return res.Items, nil
 }

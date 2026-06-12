@@ -34,7 +34,12 @@ func Run(clientVersion, path string) *jellyfin.Client {
 	password := viper.GetString("password")
 	device := viper.GetString("device")
 	if device == "" {
-		device, _ = os.Hostname()
+		var err error
+		device, err = os.Hostname()
+		if err != nil {
+			slog.Warn("failed to get hostname, using uuid as fallback", "err", err)
+			device = uuid.NewString()
+		}
 		viper.Set("device", device)
 		configModified = true
 	}

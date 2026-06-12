@@ -33,6 +33,7 @@ func createMpv() (*mpv, error) {
 	}
 	if err != nil {
 		cmd.Process.Kill()
+		cmd.Wait()
 		return nil, fmt.Errorf("failed to connect to mpv socket: %w", err)
 	}
 	slog.Debug("successfully connected to mpv", "socket", socket)

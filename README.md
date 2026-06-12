@@ -3,8 +3,10 @@
 > **This is a fork of [hacel/jfsh](https://github.com/hacel/jfsh).**
 > Changes in this fork:
 > - **Media library browsing**: Added a new "Libraries" tab to browse your Jellyfin media libraries directly. (Implemented by minimax-m2.7)
+> - **Season navigation**: Browse TV series by season (Series → Seasons → Episodes) with season info display. (Implemented by deepseek-v4-pro)
 > - **Manual segment skipping**: Press `Ctrl+s` in the mpv window to skip the current segment (intro, outro, etc.), independent of the `skip_segments` auto-skip configuration. (Implemented by opus 4.6)
 > - **Media info display**: Shows resolution, codec, HDR info for movies and episodes in the description line. (Implemented by minimax-m2.7)
+> - **Genre display**: Shows genres for movies, series, and videos in the description line. (Implemented by deepseek-v4-pro)
 
 [中文说明](README_zh.md)
 
@@ -20,7 +22,9 @@ Inspired by [jftui](https://github.com/Aanok/jftui).
 - Tracks playback progress and updates jellyfin!
 - Automatic and manual segment (intro, etc.) skipping!
 - **Library browsing**: Browse your media libraries via the Libraries tab!
+- **Season navigation**: Browse TV series by season (Series → Seasons → Episodes)!
 - **Media info display**: Shows resolution, codec, HDR info for movies and episodes!
+- **Genre display**: Shows genres for movies, series, and videos!
 - No mouse required!
 
 ## Installation
@@ -76,7 +80,8 @@ mv jfsh ~/.local/bin/
 
    - Switch to the **Libraries** tab to view all media libraries
    - Select a library and press **Enter** to browse its contents
-   - Select a specific item (movie, series) and press **Enter** to play
+   - For series, select to view **Seasons**, then select a season to view episodes
+   - Select a specific item (movie, episode) and press **Enter** to play
    - Press **Esc** or **Backspace** to go back
 
 6. **Quit**
